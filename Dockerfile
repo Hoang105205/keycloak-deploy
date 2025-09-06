@@ -1,13 +1,15 @@
-# Dockerfile
+# Keycloak 24 ổn định, bạn có thể giữ 24.0.5 nếu muốn
 FROM quay.io/keycloak/keycloak:24.0.5
 
-# Khai báo DB vendor (các thông số còn lại set qua ENV trên Render)
-ENV KC_DB=postgres
+# Không hardcode admin/password trong image. Để Render set ENV.
+# Bật cache local để tránh cảnh báo cluster/JGroups trên single node
+ENV KC_CACHE=local
 
-# Chạy server ở HTTP (phù hợp reverse proxy của Render), nhận X-Forwarded-*,
-# tắt hostname-strict để đỡ lỗi khi chạy sau proxy.
-CMD /opt/keycloak/bin/kc.sh start \
-  --http-enabled=true \
-  --http-port=${PORT:-8080} \
-  --proxy-headers=xforwarded \
-  --hostname-strict=false
+# Dùng ENTRYPOINT mặc định của image: /opt/keycloak/bin/kc.sh
+# Chỉ cần chỉ định CMD là "start" với các tham số run-time phù hợp Render
+CMD ["start",
+     "--http-enabled=true",
+     "--http-port=${PORT}",
+     "--hostname=${KC_HOSTNAME}",
+     "--hostname-strict=false",
+     "--proxy=edge"]
